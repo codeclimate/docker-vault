@@ -1,0 +1,27 @@
+#!/bin/bash
+set -e
+
+backends=$(echo $VAULT_BACKENDS | tr "," "\n")
+listeners=$(echo $VAULT_LISTENERS | tr "," "\n")
+
+for address in ${backends[@]}; do
+  cat >>/etc/vault.hcl <<EOM
+
+backend "consul" {
+  address = "$address"
+  path = "vault"
+}
+EOM
+done
+
+for address in ${listeners[@]}; do
+  cat >>/etc/vault.hcl <<EOM
+
+listener "tcp" {
+  address = "$address"
+  tls_disable = 1
+}
+EOM
+done
+
+exec /usr/local/bin/vault $@
